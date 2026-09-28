@@ -112,7 +112,7 @@ class RecordingService : Service() {
         }
         return Notification.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_mic)
-            .setContentTitle("Murmur is listening")
+            .setContentTitle("Spoke is listening")
             .setContentText("Tap the red button to finish")
             .setOngoing(true)
             .build()

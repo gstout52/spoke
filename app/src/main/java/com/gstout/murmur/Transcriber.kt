@@ -29,7 +29,7 @@ object Transcriber {
                 "whisper-large-v3-turbo",
             )
         }
-        if (key.isBlank()) throw IOException("Add a transcription API key in the Murmur app")
+        if (key.isBlank()) throw IOException("Add a transcription API key in the Spoke app")
 
         val body = MultipartBody.Builder()
             .setType(MultipartBody.FORM)

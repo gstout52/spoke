@@ -13,7 +13,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Murmur"
+            android:text="Spoke"
             android:textAppearance="?attr/textAppearanceHeadlineMedium" />
 
         <TextView
@@ -47,7 +47,7 @@
             style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Turn on Murmur in Accessibility" />
+            android:text="Turn on Spoke in Accessibility" />
 
         <TextView
             android:id="@+id/restrictedHint"
@@ -62,7 +62,7 @@
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Open Murmur app info" />
+            android:text="Open Spoke app info" />
 
         <!-- Transcription -->
         <TextView

@@ -4,6 +4,7 @@ import android.content.Context
 
 /** Settings, stored in app-private SharedPreferences. */
 class Prefs(context: Context) {
+    // File name predates the rename to Spoke; kept so existing settings survive updates.
     private val sp = context.getSharedPreferences("murmur", Context.MODE_PRIVATE)
 
     var provider: String

@@ -128,9 +128,9 @@ class MainActivity : AppCompatActivity() {
         ).orEmpty()
         val accessibilityOn = enabledServices.contains("$packageName/")
         btnAccessibility.text = if (accessibilityOn) {
-            "✓ Murmur is on in Accessibility"
+            "✓ Spoke is on in Accessibility"
         } else {
-            "Turn on Murmur in Accessibility"
+            "Turn on Spoke in Accessibility"
         }
         findViewById<View>(R.id.restrictedHint).visibility = if (accessibilityOn) View.GONE else View.VISIBLE
         findViewById<View>(R.id.btnAppInfo).visibility = if (accessibilityOn) View.GONE else View.VISIBLE

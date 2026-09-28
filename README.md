@@ -1,4 +1,4 @@
-# Murmur
+# Spoke
 
 Voice dictation for Android that types clean text into any app. Tap a text field, tap the floating mic, talk, and tap again. Your words show up already tidied: filler words gone, punctuation fixed, and mid-sentence corrections applied.
 
@@ -13,9 +13,9 @@ It's an open-source take on the tap-and-talk experience of apps like Wispr Flow,
 
 ## Install
 
-1. Download `murmur.apk` from the [latest release](../../releases/latest) on your Android phone and open it. Allow your browser to install apps if asked.
-2. Open Murmur and allow the microphone and notifications.
-3. Tap **Turn on Murmur in Accessibility** and enable it. Android may call this a "restricted setting" for apps installed outside the Play Store. If so, tap **Open Murmur app info**, open the ⋮ menu, choose **Allow restricted settings**, and try again.
+1. Download `spoke.apk` from the [latest release](../../releases/latest) on your Android phone and open it. Allow your browser to install apps if asked.
+2. Open Spoke and allow the microphone and notifications.
+3. Tap **Turn on Spoke in Accessibility** and enable it. Android may call this a "restricted setting" for apps installed outside the Play Store. If so, tap **Open Spoke app info**, open the ⋮ menu, choose **Allow restricted settings**, and try again.
 4. Paste your API keys:
    - Speech-to-text: a [Groq](https://console.groq.com) key (free tier) or an [OpenAI](https://platform.openai.com) key.
    - Cleanup (optional): an [Anthropic](https://console.anthropic.com) key. Without one, you get the raw transcript.
@@ -25,9 +25,9 @@ Requires Android 10 or newer.
 
 ## Privacy
 
-- Audio goes directly from your phone to the speech-to-text provider you choose. Transcripts go to Anthropic only if cleanup is on. There's no Murmur server, analytics or tracking.
+- Audio goes directly from your phone to the speech-to-text provider you choose. Transcripts go to Anthropic only if cleanup is on. There's no Spoke server, analytics or tracking.
 - API keys are stored only on your phone, in app-private storage.
-- The accessibility permission is used only to find the focused text field and type into it. Murmur doesn't read or store other screen content.
+- The accessibility permission is used only to find the focused text field and type into it. Spoke doesn't read or store other screen content.
 - It doesn't work in password fields, and it never appears in them.
 
 ## Costs
@@ -62,7 +62,7 @@ Please don't report security problems in public issues. Use GitHub's **Report a 
 
 ## Driving
 
-Murmur needs a tap to start and stop, so it isn't fully hands-free. Follow your local laws about using a phone while driving.
+Spoke needs a tap to start and stop, so it isn't fully hands-free. Follow your local laws about using a phone while driving.
 
 ## License
 

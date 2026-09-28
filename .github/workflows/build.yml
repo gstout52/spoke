@@ -26,20 +26,20 @@ jobs:
           gradle-version: "8.10.2"
 
       - name: Decode signing key
-        run: echo "${{ secrets.MURMUR_KEYSTORE_B64 }}" | base64 -d > "$RUNNER_TEMP/murmur.jks"
+        run: echo "${{ secrets.SPOKE_KEYSTORE_B64 }}" | base64 -d > "$RUNNER_TEMP/spoke.jks"
 
       - name: Build release APK
         env:
-          MURMUR_KEYSTORE: ${{ runner.temp }}/murmur.jks
-          MURMUR_KEYSTORE_PASSWORD: ${{ secrets.MURMUR_KEYSTORE_PASSWORD }}
+          SPOKE_KEYSTORE: ${{ runner.temp }}/spoke.jks
+          SPOKE_KEYSTORE_PASSWORD: ${{ secrets.SPOKE_KEYSTORE_PASSWORD }}
         run: |
           gradle :app:assembleRelease --stacktrace
-          cp app/build/outputs/apk/release/app-release.apk murmur.apk
+          cp app/build/outputs/apk/release/app-release.apk spoke.apk
 
       - name: Publish release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           tag_name: build-${{ github.run_number }}
-          name: Murmur build ${{ github.run_number }}
-          files: murmur.apk
+          name: Spoke build ${{ github.run_number }}
+          files: spoke.apk
           make_latest: true

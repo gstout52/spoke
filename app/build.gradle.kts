@@ -4,8 +4,8 @@ plugins {
 }
 
 // CI supplies the signing keystore so every build installs over the previous one.
-val keystorePath: String? = System.getenv("MURMUR_KEYSTORE")
-val keystorePassword: String? = System.getenv("MURMUR_KEYSTORE_PASSWORD")
+val keystorePath: String? = System.getenv("SPOKE_KEYSTORE")
+val keystorePassword: String? = System.getenv("SPOKE_KEYSTORE_PASSWORD")
 val buildNumber = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 1
 
 android {

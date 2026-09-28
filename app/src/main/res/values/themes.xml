@@ -1,5 +1,5 @@
 <resources>
-    <style name="Theme.Murmur" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/murmur_primary</item>
+    <style name="Theme.Spoke" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/spoke_primary</item>
     </style>
 </resources>

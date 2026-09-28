@@ -199,7 +199,7 @@ class DictationAccessibilityService : AccessibilityService() {
 
     private fun startDictation() {
         if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            toast("Open Murmur and allow microphone access")
+            toast("Open Spoke and allow microphone access")
             startActivity(Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             return
         }
