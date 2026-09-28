@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Murmur</string>
+    <string name="accessibility_description">Shows a floating mic button when you tap into a text field. Tap it to dictate; Murmur transcribes your speech, cleans it up, and types it into the field. Murmur only reads the focused text field so it can insert your dictation.</string>
+</resources>
