@@ -2,6 +2,7 @@ package com.gstout.murmur
 
 import android.Manifest
 import android.accessibilityservice.AccessibilityService
+import android.accessibilityservice.InputMethod
 import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -9,17 +10,21 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.PixelFormat
 import android.graphics.Rect
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
+import android.text.InputType
 import android.view.ViewConfiguration
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityWindowInfo
+import android.view.inputmethod.EditorInfo
+import androidx.annotation.RequiresApi
 import android.widget.Toast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -55,10 +60,30 @@ class DictationAccessibilityService : AccessibilityService() {
         windowManager = getSystemService(WindowManager::class.java)
     }
 
-    override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        // Events arrive in bursts; settle before checking focus and keyboard state.
+    override fun onAccessibilityEvent(event: AccessibilityEvent?) = scheduleRefresh()
+
+    /** Events arrive in bursts; settle before checking focus and keyboard state. */
+    private fun scheduleRefresh() {
         handler.removeCallbacks(refreshRunnable)
         handler.postDelayed(refreshRunnable, 150)
+    }
+
+    /**
+     * Android 13+ mirrors the keyboard's input session to this service. That reports any
+     * active text field, including ones (Jetpack Compose, Flutter, custom editors) that
+     * don't show up correctly in the accessibility focus tree.
+     */
+    @RequiresApi(33)
+    override fun onCreateInputMethod(): InputMethod = object : InputMethod(this) {
+        override fun onStartInput(attribute: EditorInfo, restarting: Boolean) {
+            super.onStartInput(attribute, restarting)
+            handler.post { scheduleRefresh() }
+        }
+
+        override fun onFinishInput() {
+            super.onFinishInput()
+            handler.post { scheduleRefresh() }
+        }
     }
 
     override fun onInterrupt() {}
@@ -74,8 +99,53 @@ class DictationAccessibilityService : AccessibilityService() {
 
     // ---- Bubble visibility ----
 
-    private fun focusedEditable(): AccessibilityNodeInfo? =
-        findFocus(AccessibilityNodeInfo.FOCUS_INPUT)?.takeIf { it.isEditable && !it.isPassword }
+    /**
+     * The focused, editable, non-password text field. Some UI toolkits (notably Jetpack
+     * Compose) report the whole screen container as input-focused, so search inside it
+     * for the text field that actually has focus.
+     */
+    private fun focusedEditable(): AccessibilityNodeInfo? {
+        val focused = findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
+        if (focused != null && focused.isEditable) return focused.takeUnless { it.isPassword }
+        val roots = listOfNotNull(focused, rootInActiveWindow)
+        for (root in roots) {
+            findFocusedEditable(root)?.let { return it.takeUnless { node -> node.isPassword } }
+        }
+        return null
+    }
+
+    private fun findFocusedEditable(root: AccessibilityNodeInfo): AccessibilityNodeInfo? {
+        val queue = ArrayDeque<AccessibilityNodeInfo>().apply { add(root) }
+        var visited = 0
+        while (queue.isNotEmpty() && visited < MAX_NODES_SEARCHED) {
+            val node = queue.removeFirst()
+            visited++
+            if (node.isEditable && node.isFocused) return node
+            for (i in 0 until node.childCount) node.getChild(i)?.let(queue::addLast)
+        }
+        return null
+    }
+
+    /** The keyboard's active text field (Android 13+), unless it's a password field. */
+    private fun activeInputSession(): EditorInfo? {
+        if (Build.VERSION.SDK_INT < 33) return null
+        val im = inputMethod ?: return null
+        if (!im.currentInputStarted) return null
+        val editor = im.currentInputEditorInfo ?: return null
+        return editor.takeUnless { isPasswordOrNonText(it.inputType) }
+    }
+
+    private fun isPasswordOrNonText(inputType: Int): Boolean {
+        if (inputType == InputType.TYPE_NULL) return true
+        val variation = inputType and InputType.TYPE_MASK_VARIATION
+        return when (inputType and InputType.TYPE_MASK_CLASS) {
+            InputType.TYPE_CLASS_TEXT -> variation == InputType.TYPE_TEXT_VARIATION_PASSWORD ||
+                variation == InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD ||
+                variation == InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD
+            InputType.TYPE_CLASS_NUMBER -> variation == InputType.TYPE_NUMBER_VARIATION_PASSWORD
+            else -> false
+        }
+    }
 
     private fun keyboardBounds(): Rect? =
         windows.firstOrNull { it.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD }
@@ -84,7 +154,11 @@ class DictationAccessibilityService : AccessibilityService() {
     private fun refreshBubble() {
         if (state != State.IDLE) return
         val keyboard = keyboardBounds()
-        if (keyboard != null && focusedEditable() != null) showBubble(keyboard) else removeBubble()
+        if (keyboard != null && (activeInputSession() != null || focusedEditable() != null)) {
+            showBubble(keyboard)
+        } else {
+            removeBubble()
+        }
     }
 
     private fun showBubble(keyboard: Rect) {
@@ -280,6 +354,8 @@ class DictationAccessibilityService : AccessibilityService() {
     // ---- Text insertion ----
 
     private fun insertText(dictated: String) {
+        if (Build.VERSION.SDK_INT >= 33 && commitThroughKeyboardSession(dictated)) return
+
         val node = target?.takeIf { it.refresh() && it.isEditable } ?: focusedEditable()
         if (node == null) {
             copyToClipboard(dictated)
@@ -322,6 +398,25 @@ class DictationAccessibilityService : AccessibilityService() {
         }
     }
 
+    /**
+     * Type the text through the keyboard's input session, the same way a keyboard does.
+     * Works in fields that ignore accessibility SET_TEXT.
+     */
+    @RequiresApi(33)
+    private fun commitThroughKeyboardSession(dictated: String): Boolean {
+        if (activeInputSession() == null) return false
+        val connection = inputMethod?.currentInputConnection ?: return false
+        val before = connection.getSurroundingText(1, 0, 0)
+        val charBefore = before?.let { st ->
+            val cursor = st.selectionStart - st.offset
+            if (cursor > 0 && cursor <= st.text.length) st.text[cursor - 1] else null
+        }
+        val needsSpace = charBefore != null && !charBefore.isWhitespace() &&
+            dictated.firstOrNull()?.isLetterOrDigit() == true
+        connection.commitText(if (needsSpace) " $dictated" else dictated, 1, null)
+        return true
+    }
+
     private fun copyToClipboard(text: String) {
         getSystemService(ClipboardManager::class.java)
             .setPrimaryClip(ClipData.newPlainText("Dictation", text))
@@ -339,5 +434,6 @@ class DictationAccessibilityService : AccessibilityService() {
             private set
 
         private const val BUBBLE_DP = 52
+        private const val MAX_NODES_SEARCHED = 400
     }
 }
