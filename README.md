@@ -2,7 +2,7 @@
 
 Voice dictation for Android that types clean text into any app. Tap a text field, tap the floating mic, talk, and tap again. Your words show up already tidied: filler words gone, punctuation fixed, and mid-sentence corrections applied.
 
-It's an open-source take on the tap-and-talk experience of apps like Wispr Flow, using API keys you bring yourself.
+It's an open-source take on the tap-and-talk experience of apps like Wispr Flow, using API keys you bring yourself. There's also [Spoke for Mac](https://github.com/gstout52/spoke-mac).
 
 ## What it does
 
